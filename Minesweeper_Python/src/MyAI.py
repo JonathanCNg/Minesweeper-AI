@@ -12,6 +12,7 @@
 #				- DO NOT MAKE CHANGES TO THIS FILE.
 # ==============================CS-199==================================
 
+from re import T
 from AI import AI
 from Action import Action
 
@@ -32,13 +33,19 @@ class MyAI( AI ):
 		#							YOUR CODE BEGINS						   #
 		########################################################################
 		print("hello world")
-		rows = rowDimension
-		cols = colDimension
-		mines = totalMines
-		sx = startX
-		sy = startY
-		tiles = {}
-
+		self.rows = rowDimension
+		self.cols = colDimension
+		self.mines = totalMines
+		self.sx = startX
+		self.sy = starty
+		self.tiles = {}
+		for i in range(1, cols+1):
+			for j in range(1, rows+1):
+				t = Tile()
+				t.x = i
+				t.y = j 
+				tiles[(i, j)] = t
+		self.tiles[sx, sy].covered = False
 
 
 
@@ -65,13 +72,20 @@ class MyAI( AI ):
 		#							YOUR CODE ENDS							   #
 		########################################################################
 
-	def getNeighbors(x, y):
+	def getNeighbors(self, x, y):
 		
 		pass
 		
-	def getNeighborsActive(x, y):
+	def getNeighborsActive(self, x, y):
 		pass
 		
-	def getNeighborsFlagged(x, y):
+	def getNeighborsFlagged(self, x, y):
 		pass
+		
+	def getTile(self, x, y):
+		return self.tiles[x, y]
+
+	def flagTile(self, x, y):
+		# if (self.tiles)
+			
 		
