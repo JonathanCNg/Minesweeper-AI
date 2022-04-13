@@ -12,6 +12,7 @@
 #				- DO NOT MAKE CHANGES TO THIS FILE.
 # ==============================CS-199==================================
 
+from pickle import FALSE
 from re import T
 from AI import AI
 from Action import Action
@@ -20,7 +21,7 @@ class Tile():
 	x = 0
 	y = 0
 	covered = True
-	flag = False
+	flagged = False
 	number = 0
 	effective_number = 0
 
@@ -37,15 +38,15 @@ class MyAI( AI ):
 		self.cols = colDimension
 		self.mines = totalMines
 		self.sx = startX
-		self.sy = starty
+		self.sy = startY
 		self.tiles = {}
-		for i in range(1, cols+1):
-			for j in range(1, rows+1):
+		for i in range(1, self.cols+1):
+			for j in range(1, self.rows+1):
 				t = Tile()
 				t.x = i
 				t.y = j 
-				tiles[(i, j)] = t
-		self.tiles[sx, sy].covered = False
+				self.tiles[(i, j)] = t
+		self.tiles[self.sx, self.sy].covered = False
 
 
 
@@ -62,7 +63,7 @@ class MyAI( AI ):
 		#							YOUR CODE BEGINS						   #
 		########################################################################
 
-
+		
 
 
 
@@ -72,9 +73,25 @@ class MyAI( AI ):
 		#							YOUR CODE ENDS							   #
 		########################################################################
 
+	# returns a list of the Tiles at all 8 surrounding tiles of target (x,y), or fewer if the target is at an edge, ordered clockwise starting at top left tile
 	def getNeighbors(self, x, y):
-		
-		pass
+		differentials = [
+			(-1, 1),
+			(0, 1),
+			(1, 1),
+			(1, 0),
+			(1, -1),
+			(0, -1),
+			(-1, -1),
+			(-1, 0)
+		]
+		neighbors = []
+		for col, row in differentials:
+			newX = x + col
+			newY = y + row
+			if (newX >= 1) and (newY >= 1) and (newX <= self.cols) and (newY <= self.rows):
+				neighbors.append(self.tiles[newX,newY])
+		return neighbors
 		
 	def getNeighborsActive(self, x, y):
 		pass
@@ -85,7 +102,28 @@ class MyAI( AI ):
 	def getTile(self, x, y):
 		return self.tiles[x, y]
 
-	def flagTile(self, x, y):
-		# if (self.tiles)
+	# after flagging a tile, use this helper function to update our database
+	def flaggedTile(self, x, y):
+		if (self.tiles[x,y].flagged == True):
+			print("FLAGGING ERROR: Tile at (" + str(x) + ", " + str(y) + ") already flagged!")
+		else:
+			self.tiles[x,y].flagged = True
+	
+	# after unflagging a tile, use this helper function to update our database
+	def unflaggedTile(self, x, y):
+		if (self.tiles[x,y].flagged == False):
+			print("UNFLAGGING ERROR: Tile at (" + str(x) + ", " + str(y) + ") already unflagged!")
+		else:
+			self.tiles[x,y].flagged = False
+
+	# after uncovering a tile, use this helper function to update our database
+	def uncoveredTile(self, x, y, label):
+		if (self.tiles[x,y].covered == False):
+			print("UNCOVERING ERROR: Tile at (" + str(x) + ", " + str(y) + ") already uncovered!")
+		else:
+			self.tiles[x,y].covered = False
+			self.tiles[x,y].number = label
+	
+	
 			
 		
