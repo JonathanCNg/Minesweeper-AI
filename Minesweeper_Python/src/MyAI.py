@@ -23,7 +23,7 @@ class Tile():
 	covered = True
 	flagged = False 
 	percept_number = None
-	effective_number = None	# effective_number = percept_number - flagged neighbors
+	effective_number = None		# effective_number = percept_number - flagged neighbors
 
 class MyAI( AI ):
 	def __init__(self, rowDimension, colDimension, totalMines, startX, startY):
@@ -31,8 +31,8 @@ class MyAI( AI ):
 		self.cols = colDimension
 		self.mines = totalMines
 		self.tiles = {}
-		self.last_action = "NULL"	# Options are "FLAG", "UNCOVER", "UNFLAG"
-		self.last_tile = (startX, startY) # The last tile to have an action performed on it
+		self.last_action = "NULL"			# AI.Actions.[ACTION]
+		self.last_tile = (startX, startY) 	# The last tile to have an action performed on it
 		for i in range(0, self.cols):
 			for j in range(0, self.rows):
 				t = Tile()
@@ -42,15 +42,14 @@ class MyAI( AI ):
 		print(str(startX) + ", " + str(startY));
 		self.uncoveredTile(startX, startY, 0)
 		self.tiles[(startX, startY)].effective_number = 0;
-
 		
 	def getAction(self, number: int) -> "Action Object":
 		# Updating our database after every turn
 		if self.last_action == AI.Action.UNCOVER:
-			self.uncoveredTile(self.last_tile[0],self.last_tile[1],number)
+			self.uncoveredTile(self.last_tile[0], self.last_tile[1], number)
 		elif self.last_action == AI.Action.FLAG:
-			self.flaggedTile(self.last_tile[0],self.last_tile[1])
-			self.updateEffectiveNumberOfNeighbors(self.last_tile[0],self.last_tile[1])
+			self.flaggedTile(self.last_tile[0], self.last_tile[1])
+			self.updateEffectiveNumberOfNeighbors(self.last_tile[0], self.last_tile[1])
 
 				
 
@@ -60,12 +59,9 @@ class MyAI( AI ):
 			# or flag (when effective number is equal to uncovered neighbors, non-zero) and decrement effective number
 		for pair in self.tiles:
 			tile = self.tiles[pair]
-			
 			if tile.effective_number == 0:
 				neighbors = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)
 				if neighbors:
-					# print(self.tiles[(neighbors[0].x, neighbors[0].y)].covered)
-					# print("Jon's message: " + str(neighbors[0].x + 1) + ", " + str(neighbors[0].y + 1))
 					self.updateLast(AI.Action.UNCOVER, neighbors[0].x, neighbors[0].y)
 					return Action(AI.Action.UNCOVER, neighbors[0].x, neighbors[0].y)
 			if (tile.covered == False):
@@ -74,23 +70,11 @@ class MyAI( AI ):
 				if (tile.effective_number != 0) and (tile.effective_number == len(covered_neighbors)):
 					self.updateLast(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
 					return Action(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
-		
-		# 
-
 		return Action(AI.Action.LEAVE)
 
 	# returns a list of the Tiles at all 8 surrounding tiles of target (x,y), or fewer if the target is at an edge, ordered clockwise starting at top left tile
 	def getNeighbors(self, x, y):
-		differentials = [
-			(-1, 1),
-			(0, 1),
-			(1, 1),
-			(1, 0),
-			(1, -1),
-			(0, -1),
-			(-1, -1),
-			(-1, 0)
-		]
+		differentials = [(-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0)]
 		neighbors = []
 		for col, row in differentials:
 			newX = x + col
@@ -102,18 +86,9 @@ class MyAI( AI ):
 	def getNeighborsActive(self, x, y): #returns neighbors who are uncovered, flagged, or with a non-zero effective_number
 		pass
 		
-
+	
 	def getNeighborsCovered(self, x, y):
-		differentials = [
-			(-1, 1),
-			(0, 1),
-			(1, 1),
-			(1, 0),
-			(1, -1),
-			(0, -1),
-			(-1, -1),
-			(-1, 0)
-		]
+		differentials = [(-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0)]
 		neighbors = []
 		for col, row in differentials:
 			newX = x + col
@@ -123,16 +98,7 @@ class MyAI( AI ):
 		return neighbors
 
 	def getNeighborsFlagged(self, x, y):
-		differentials = [
-			(-1, 1),
-			(0, 1),
-			(1, 1),
-			(1, 0),
-			(1, -1),
-			(0, -1),
-			(-1, -1),
-			(-1, 0)
-		]
+		differentials = [(-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0)]
 		neighbors = []
 		for col, row in differentials:
 			newX = x + col
@@ -142,16 +108,7 @@ class MyAI( AI ):
 		return neighbors
 
 	def getNeighborsCoveredAndUnflagged(self, x, y):
-		differentials = [
-			(-1, 1),
-			(0, 1),
-			(1, 1),
-			(1, 0),
-			(1, -1),
-			(0, -1),
-			(-1, -1),
-			(-1, 0)
-		]
+		differentials = [(-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0)]
 		neighbors = []
 		for col, row in differentials:
 			newX = x + col
@@ -161,16 +118,7 @@ class MyAI( AI ):
 		return neighbors
 
 	def getNeighborsUncovered(self, x, y):
-		differentials = [
-			(-1, 1),
-			(0, 1),
-			(1, 1),
-			(1, 0),
-			(1, -1),
-			(0, -1),
-			(-1, -1),
-			(-1, 0)
-		]
+		differentials = [(-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0)]
 		neighbors = []
 		for col, row in differentials:
 			newX = x + col
@@ -204,7 +152,6 @@ class MyAI( AI ):
 			self.tiles[(x,y)].covered = False
 			self.tiles[(x,y)].percept_number = label
 			self.updateEffectiveNumberOfCell(x,y)
-		# should we update effective number immediately? probably
 
 	def updateEffectiveNumberOfCell(self, x, y):
 		self.tiles[(x,y)].effective_number = self.tiles[(x,y)].percept_number - len(self.getNeighborsFlagged(x, y))
