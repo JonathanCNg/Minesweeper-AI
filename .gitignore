@@ -1,4 +1,3 @@
 WorldGenerator
 WorldGenerator/Problems
-__pycache__
-*.pyc
+Minesweeper_Python/src/__pycache__/
