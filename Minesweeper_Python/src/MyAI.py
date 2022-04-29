@@ -29,6 +29,7 @@ class MyAI( AI ):
 	def __init__(self, rowDimension, colDimension, totalMines, startX, startY):
 		self.rows = rowDimension
 		self.cols = colDimension
+		self.total_tiles = rowDimension*colDimension
 		self.mines = totalMines
 		self.tiles = {}
 		self.last_action = "NULL"			# AI.Actions.[ACTION]
@@ -39,9 +40,10 @@ class MyAI( AI ):
 				t.x = i
 				t.y = j 
 				self.tiles[(i, j)] = t
-		print(str(startX) + ", " + str(startY));
+		print(str(startX) + ", " + str(startY))
+		self.count_uncovered_or_flagged_tiles = 0
 		self.uncoveredTile(startX, startY, 0)
-		self.tiles[(startX, startY)].effective_number = 0;
+		self.tiles[(startX, startY)].effective_number = 0
 		
 	def getAction(self, number: int) -> "Action Object":
 		# Updating our database after every turn
@@ -51,12 +53,24 @@ class MyAI( AI ):
 			self.flaggedTile(self.last_tile[0], self.last_tile[1])
 			self.updateEffectiveNumberOfNeighbors(self.last_tile[0], self.last_tile[1])
 
-				
+		if(self.total_tiles - self.count_uncovered_or_flagged_tiles == 0):
+			for pair in self.tiles:
+				tile = self.tiles[pair]
+				if tile.covered:
+					return Action(AI.Action.UNCOVER, tile.x, tile.y)
+		elif(self.total_tiles - self.count_uncovered_or_flagged_tiles == self.mines):
+			for pair in self.tiles:
+				tile = self.tiles[pair]
+				if tile.covered:
+					return Action(AI.Action.FLAG, tile.x, tile.y)
+		
 
-		# Rule of Thumb
+
+		# Rule of Thumb 🤖
 			# loop through all tiles we have and if we have a "rule of thumb",
 			# take action to uncover (when effective number is 0 and we still have (covered && unflagged) neighbors) 
 			# or flag (when effective number is equal to uncovered neighbors, non-zero) and decrement effective number
+			# If no certainly safe tiles are uncovered, use getLeastRiskTile
 		for pair in self.tiles:
 			tile = self.tiles[pair]
 			if tile.effective_number == 0:
@@ -70,6 +84,23 @@ class MyAI( AI ):
 				if (tile.effective_number != 0) and (tile.effective_number == len(covered_neighbors)):
 					self.updateLast(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
 					return Action(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
+		
+		# Get least risk tile 🧠✖️➖➗
+		if self.mines != 0:
+			guess_tile = self.getLeastRiskTile()
+			# print("Guess Tile: " + str(guess_tile.x+1) + ", " + str(guess_tile.y+1))
+			guess_neighbors = self.getNeighborsCoveredAndUnflagged(guess_tile.x, guess_tile.y)
+			if (len(guess_neighbors) != 0):
+				self.updateLast(AI.Action.UNCOVER, guess_neighbors[0].x, guess_neighbors[0].y)
+				return Action(AI.Action.UNCOVER, guess_neighbors[0].x, guess_neighbors[0].y)
+
+		if(self.total_tiles - self.count_uncovered_or_flagged_tiles != 0): 
+			for pair in self.tiles:
+				tile = self.tiles[pair]
+				if tile.covered:
+					return Action(AI.Action.UNCOVER, tile.x, tile.y)
+
+		# I deadass dunno what to do 🥛🏃‍♂️💨
 		return Action(AI.Action.LEAVE)
 
 	# returns a list of the Tiles at all 8 surrounding tiles of target (x,y), or fewer if the target is at an edge, ordered clockwise starting at top left tile
@@ -132,6 +163,8 @@ class MyAI( AI ):
 
 	# after flagging a tile, use this helper function to update our database
 	def flaggedTile(self, x, y):
+		self.mines -= 1
+		self.count_uncovered_or_flagged_tiles += 1
 		if (self.tiles[(x,y)].flagged == True):
 			print("FLAGGING ERROR: Tile at (" + str(x+1) + ", " + str(y+1) + ") already flagged!")
 		else:
@@ -139,6 +172,8 @@ class MyAI( AI ):
 	
 	# after unflagging a tile, use this helper function to update our database
 	def unflaggedTile(self, x, y):
+		self.mines += 1
+		self.count_uncovered_or_flagged_tiles -= 1
 		if (self.tiles[(x,y)].flagged == False):
 			print("UNFLAGGING ERROR: Tile at (" + str(x+1) + ", " + str(y+1) + ") already unflagged!")
 		else:
@@ -146,6 +181,7 @@ class MyAI( AI ):
 
 	# after uncovering a tile, use this helper function to update our database
 	def uncoveredTile(self, x, y, label):
+		self.count_uncovered_or_flagged_tiles += 1
 		if (self.tiles[(x, y)].covered == False):
 			print("UNCOVERING ERROR: Tile at (" + str(x+1) + ", " + str(y+1) + ") already uncovered!")
 		else:
@@ -165,12 +201,13 @@ class MyAI( AI ):
 		self.last_action = action
 		self.last_tile = (x, y)
 
-	def getLeastRiskTile(self):
+	def getLeastRiskTile(self): #returns tile with the least mines to neighbor ratio
 		percept_tiles = []
 		for i in range(1, 9):
-			for key, tile in self.tiles:
-				if tile.percept == i:
-					percept_tiles.append((tile, len(self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)-tile.percept_number)))
+			for key in self.tiles:
+				tile = self.tiles[key]
+				if ((tile.percept_number == i) and (len(self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)) > 0)):
+					percept_tiles.append((tile, tile.percept_number/len(self.getNeighborsCoveredAndUnflagged(tile.x, tile.y))))
 		leastRiskTuple = min(percept_tiles, key = lambda t: t[1])
 		return leastRiskTuple[0]
 
