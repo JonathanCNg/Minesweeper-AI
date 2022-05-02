@@ -40,68 +40,72 @@ class MyAI( AI ):
 				t.x = i
 				t.y = j 
 				self.tiles[(i, j)] = t
-		print(str(startX) + ", " + str(startY))
 		self.count_uncovered_or_flagged_tiles = 0
 		self.uncoveredTile(startX, startY, 0)
 		self.tiles[(startX, startY)].effective_number = 0
+
+		# print(str(startX) + ", " + str(startY))	# For debugging purposes
 		
 	def getAction(self, number: int) -> "Action Object":
+
 		# Updating our database after every turn
 		if self.last_action == AI.Action.UNCOVER:
 			self.uncoveredTile(self.last_tile[0], self.last_tile[1], number)
 		elif self.last_action == AI.Action.FLAG:
 			self.flaggedTile(self.last_tile[0], self.last_tile[1])
-			self.updateEffectiveNumberOfNeighbors(self.last_tile[0], self.last_tile[1])
 
-		if(self.total_tiles - self.count_uncovered_or_flagged_tiles == 0):
+		# Code to finish the game when there are cells blocked off by a wall of mines
+		## If no mines remain yet there are covered cells, uncover all covered cells
+		if(not self.mines and self.total_tiles - self.count_uncovered_or_flagged_tiles != 0):
 			for pair in self.tiles:
 				tile = self.tiles[pair]
-				if tile.covered:
-					return Action(AI.Action.UNCOVER, tile.x, tile.y)
-		elif(self.total_tiles - self.count_uncovered_or_flagged_tiles == self.mines):
+				if (tile.covered and tile.flagged == False):
+					return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
+		## If mines exist and they match the number of covered cells, flag all covered cells
+		elif(self.mines and self.total_tiles - self.count_uncovered_or_flagged_tiles == self.mines):
 			for pair in self.tiles:
 				tile = self.tiles[pair]
-				if tile.covered:
-					return Action(AI.Action.FLAG, tile.x, tile.y)
-		
-
+				if tile.covered and tile.flagged == False:
+					return self.returnAction(AI.Action.FLAG, tile.x, tile.y)
 
 		# Rule of Thumb 🤖
-			# loop through all tiles we have and if we have a "rule of thumb",
-			# take action to uncover (when effective number is 0 and we still have (covered && unflagged) neighbors) 
-			# or flag (when effective number is equal to uncovered neighbors, non-zero) and decrement effective number
-			# If no certainly safe tiles are uncovered, use getLeastRiskTile
 		for pair in self.tiles:
 			tile = self.tiles[pair]
+			## take action to uncover (when effective number is 0 and we still have (covered && unflagged) neighbors) 
 			if tile.effective_number == 0:
 				neighbors = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)
 				if neighbors:
-					self.updateLast(AI.Action.UNCOVER, neighbors[0].x, neighbors[0].y)
-					return Action(AI.Action.UNCOVER, neighbors[0].x, neighbors[0].y)
+					return self.returnAction(AI.Action.UNCOVER, neighbors[0].x, neighbors[0].y)
+			## or flag (when effective number is equal to uncovered neighbors, non-zero) and decrement effective number
 			if (tile.covered == False):
 				covered_neighbors = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)
 				self.updateEffectiveNumberOfCell(tile.x, tile.y)
 				if (tile.effective_number != 0) and (tile.effective_number == len(covered_neighbors)):
-					self.updateLast(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
-					return Action(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
+					return self.returnAction(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
 		
-		# Get least risk tile 🧠✖️➖➗
+
+		# If no certainly safe tiles are uncovered, use getLeastRiskTile 🧠✖️➖➗
 		if self.mines != 0:
 			guess_tile = self.getLeastRiskTile()
-			# print("Guess Tile: " + str(guess_tile.x+1) + ", " + str(guess_tile.y+1))
-			guess_neighbors = self.getNeighborsCoveredAndUnflagged(guess_tile.x, guess_tile.y)
-			if (len(guess_neighbors) != 0):
-				self.updateLast(AI.Action.UNCOVER, guess_neighbors[0].x, guess_neighbors[0].y)
-				return Action(AI.Action.UNCOVER, guess_neighbors[0].x, guess_neighbors[0].y)
+			if (guess_tile):
+				guess_neighbors = self.getNeighborsCoveredAndUnflagged(guess_tile.x, guess_tile.y)
+				if (len(guess_neighbors) != 0):
+					return self.returnAction(AI.Action.UNCOVER, guess_neighbors[0].x, guess_neighbors[0].y)
 
+		# If we don't know what to do and we still have undealt with tiles (neither uncovered nor flagged), uncover one of them
 		if(self.total_tiles - self.count_uncovered_or_flagged_tiles != 0): 
 			for pair in self.tiles:
 				tile = self.tiles[pair]
-				if tile.covered:
-					return Action(AI.Action.UNCOVER, tile.x, tile.y)
+				if tile.covered and not tile.flagged:
+					return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
 
-		# I deadass dunno what to do 🥛🏃‍♂️💨
+		# No more moves
 		return Action(AI.Action.LEAVE)
+
+	def returnAction(self, action, x, y):
+		self.last_action = action
+		self.last_tile = (x, y)
+		return Action(action, x, y)
 
 	# returns a list of the Tiles at all 8 surrounding tiles of target (x,y), or fewer if the target is at an edge, ordered clockwise starting at top left tile
 	def getNeighbors(self, x, y):
@@ -178,6 +182,7 @@ class MyAI( AI ):
 			print("UNFLAGGING ERROR: Tile at (" + str(x+1) + ", " + str(y+1) + ") already unflagged!")
 		else:
 			self.tiles[(x,y)].flagged = False
+			self.updateEffectiveNumberOfNeighbors(x,y)
 
 	# after uncovering a tile, use this helper function to update our database
 	def uncoveredTile(self, x, y, label):
@@ -197,10 +202,6 @@ class MyAI( AI ):
 		for tile in uncvNeighbors:
 			self.updateEffectiveNumberOfCell(tile.x, tile.y)
 
-	def updateLast(self, action, x, y):
-		self.last_action = action
-		self.last_tile = (x, y)
-
 	def getLeastRiskTile(self): #returns tile with the least mines to neighbor ratio
 		percept_tiles = []
 		for i in range(1, 9):
@@ -208,7 +209,10 @@ class MyAI( AI ):
 				tile = self.tiles[key]
 				if ((tile.percept_number == i) and (len(self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)) > 0)):
 					percept_tiles.append((tile, tile.percept_number/len(self.getNeighborsCoveredAndUnflagged(tile.x, tile.y))))
-		leastRiskTuple = min(percept_tiles, key = lambda t: t[1])
-		return leastRiskTuple[0]
+		if percept_tiles:
+			leastRiskTuple = min(percept_tiles, key = lambda t: t[1])
+			return leastRiskTuple[0]
+		else:
+			return False
 
 
