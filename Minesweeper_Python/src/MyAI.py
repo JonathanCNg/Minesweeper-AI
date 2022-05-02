@@ -82,7 +82,6 @@ class MyAI( AI ):
 				self.updateEffectiveNumberOfCell(tile.x, tile.y)
 				if (tile.effective_number != 0) and (tile.effective_number == len(covered_neighbors)):
 					return self.returnAction(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
-		
 
 		# If no certainly safe tiles are uncovered, use getLeastRiskTile 🧠✖️➖➗
 		if self.mines != 0:
@@ -173,6 +172,7 @@ class MyAI( AI ):
 			print("FLAGGING ERROR: Tile at (" + str(x+1) + ", " + str(y+1) + ") already flagged!")
 		else:
 			self.tiles[(x,y)].flagged = True
+			self.updateEffectiveNumberOfNeighbors(x,y)
 	
 	# after unflagging a tile, use this helper function to update our database
 	def unflaggedTile(self, x, y):
