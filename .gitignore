@@ -1,3 +1,5 @@
 Problems
 EasyProblems
 **/__pycache__/
+**.log
+.vscode
