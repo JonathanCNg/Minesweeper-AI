@@ -216,3 +216,24 @@ class MyAI( AI ):
 			return False
 
 
+	def getMineCombos(self, x, y, maxNumberOfMines, totalFlagged = 0, tiles = None, tileToFlag = None, comboList = None):
+		if tileToFlag == None: #first call
+			combos = [] #list of valid list of tiles that could be flagged
+			tilesToFlag = self.getNeighborsCovered(x, y)
+			for tile in tilesToFlag:
+				self.getMineCombos(x, y, maxNumberOfMines, 0, tilesToFlag, tile, combos)
+		else: #every other call
+			pass
+			#1. flag tileToFlag and increment totalFlagged
+            #   note: be sure to update status in tiles
+            #2. check if neighpor percept number is violated
+            #   2a. if it is, return
+            #3. if not, check if maxNumberofMines == totalFlagged
+            #   3a. if it is, check if combination is already in combo. add it if not and return
+
+            #for each tile not flagged
+            #4. if not, call function on remaining unflagged and uncovered tile
+
+
+
+	
