@@ -251,7 +251,7 @@ class MyAI(AI):
 		else:
 			return False
 
-	def getMineCombos(self, x, y, maxNumberOfMines, totalFlagged=0, tiles=None, tileIndexToFlag=None, comboList=[]):
+	def getMineCombos(self, x, y, maxNumberOfMines, totalFlagged=0, tiles=None, tileIndexToFlag=None, comboList=[]): #doesn't currently work properly
 		if tileIndexToFlag == None:  # first call
 			for tileIndex in range(len(tiles)):
 				self.getMineCombos(x, y, maxNumberOfMines, 0, tiles, tileIndex, comboList)
