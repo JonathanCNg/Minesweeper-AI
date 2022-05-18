@@ -86,11 +86,37 @@ class MyAI(AI):
 				if (tile.effective_number != 0) and (tile.effective_number == len(covered_neighbors)):
 					return self.returnAction(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
 		
+		print("DFS\n")
+
 		# DFS
 		for pair in self.tiles:
 			tile = self.tiles[pair]
-			possible_mine_combos = self.getMineCombos(tile.x, tile.y, tile.effective_number)
-				
+			possible_mine_combos = self.getMineCombos(tile.x, tile.y, tile.effective_number, tiles = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y))
+			if len(possible_mine_combos) != 0:
+				print(possible_mine_combos)
+				flaggedOccurences = {}
+				unflaggedOccurences = {}
+				for tile in possible_mine_combos[0]:
+					flaggedOccurences[(tile.x, tile.y)] = 0
+					unflaggedOccurences[(tile.x, tile.y)] =  0
+				for tileList in possible_mine_combos:
+					for tile in tileList:
+						if tile.flagged:
+							flaggedOccurences[(tile.x, tile.y)] += 1
+						else:
+							unflaggedOccurences[(tile.x, tile.y)] += 1	
+				for tile in possible_mine_combos[0]:
+					print(flaggedOccurences[(tile.x, tile.y)])
+					print(unflaggedOccurences[(tile.x, tile.y)])
+					if flaggedOccurences[(tile.x, tile.y)] == len(possible_mine_combos):
+						return self.returnAction(AI.Action.FLAG, tile.x, tile.y)
+					elif unflaggedOccurences[(tile.x, tile.y)] == len(possible_mine_combos):
+						return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
+
+			# If DFS works, when running test7DFS11.txt, it should either uncover (3,3) or flag (4,3). Currently, getLeastRiskTile uncovers (1,3), which is a mine.
+			# If DFS works, when running test8DFS12.txt, it should either flag (3,3) or uncover (4,3). Currently, getLeastRiskTile uncovers (3,3), which is a mine.
+
+		print("LEAST RISK TILE\n")
 
 		# If no certainly safe tiles are uncovered, use getLeastRiskTile 🧠✖️➖➗
 		if self.mines != 0:
@@ -146,7 +172,7 @@ class MyAI(AI):
 		for col, row in differentials:
 			newX = x + col
 			newY = y + row
-			if (newX >= 0) and (newY >= 0) and (newX <= self.cols-1) and (newY <= self.rows-1) and (self.tiles[(newX, newY)].flagged == True):
+			if (newX >= 0) and (newY >= 0) and (newX <= self.cols-1) and (newY <= self.rows-1) and (self.tiles[(newX, newY)].flagged == True) and (self.tiles[(newX, newY)].covered == True):
 				neighbors.append(self.tiles[(newX, newY)])
 		return neighbors
 
@@ -225,16 +251,18 @@ class MyAI(AI):
 		else:
 			return False
 
-	def getMineCombos(self, x, y, maxNumberOfMines, totalFlagged=0, tiles=None, tileIndexToFlag=None, comboList=None):
+	def getMineCombos(self, x, y, maxNumberOfMines, totalFlagged=0, tiles=None, tileIndexToFlag=None, comboList=[]):
 		if tileIndexToFlag == None:  # first call
-			combos = []  # list of valid list of tiles that could be flagged
-			tilesToFlag = self.getNeighborsCoveredAndUnflagged(x, y)
-			for tileIndex in range(len(tilesToFlag)):
-				self.getMineCombos(x, y, maxNumberOfMines, 0, tilesToFlag, tileIndex, combos)
+			for tileIndex in range(len(tiles)):
+				self.getMineCombos(x, y, maxNumberOfMines, 0, tiles, tileIndex, comboList)
 			return comboList
 		else: #every other call
             # 1. flag tileToFlag and increment totalFlagged
 			tiles[tileIndexToFlag].flagged = True
+			print('[')
+			for tile in tiles:
+				print(tile.flagged)
+			print(']')
 			newTotalFlagged = totalFlagged + 1
             #   note: be sure to update status in tiles
             # 2. check if neighpor percept number is violated
@@ -245,22 +273,28 @@ class MyAI(AI):
 				hypoFlags = 0
 				for tile2 in tiles:
 					if (tile2 in un2) and (tile2.flagged == True):
-						hypoFlags += 1
+						print (hypoFlags)
+						print(tile.percept_number)
+						print("flagged: (", flagged[0].x, flagged[0].y, ")")
 						if (len(flagged) + hypoFlags) > tile.percept_number:
 							tiles[tileIndexToFlag].flagged = False
+							print("returns unadded")
 							return
             #   2a. if it is, return
-            # 3. if not, check if maxNumberofMines == totalFlagged
+            # 3. if not, checfff if maxNumberofMines == totalFlagged
             #   3a. if it is, check if combination is already in combo. add it if not and return
 			if newTotalFlagged == maxNumberOfMines:
 				if tiles not in comboList:
-					comboList.append(tiles)
+					comboList.append(tiles[:])
+					print(print("returns added"))
 					return
             # for each tile not flagged
                 # 4. call function on remaining unflagged and uncovered tile
 			for tileIndex in range(len(tiles)):
 				if tiles[tileIndex].flagged == False:
+					print("going deeper")
 					self.getMineCombos(x, y, maxNumberOfMines, newTotalFlagged, tiles, tileIndex, comboList)
+					return
 
 
 
