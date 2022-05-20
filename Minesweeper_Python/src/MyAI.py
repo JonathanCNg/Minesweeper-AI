@@ -93,7 +93,11 @@ class MyAI(AI):
 			tile = self.tiles[pair]
 			possible_mine_combos = self.getMineCombos(tile.x, tile.y, tile.effective_number, tiles = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y))
 			if len(possible_mine_combos) != 0:
-				print(possible_mine_combos)
+				for tilelist in possible_mine_combos:
+					print("[")
+					for tile in tilelist:
+						print(tile.flagged, ",")
+					print("], ")
 				flaggedOccurences = {}
 				unflaggedOccurences = {}
 				for tile in possible_mine_combos[0]:
@@ -255,6 +259,8 @@ class MyAI(AI):
 		if tileIndexToFlag == None:  # first call
 			for tileIndex in range(len(tiles)):
 				self.getMineCombos(x, y, maxNumberOfMines, 0, tiles, tileIndex, comboList)
+				for tile in tiles:
+					tile.flagged = False
 			return comboList
 		else: #every other call
             # 1. flag tileToFlag and increment totalFlagged
@@ -270,13 +276,11 @@ class MyAI(AI):
 			for tile in un:
 				un2 = self.getNeighborsCovered(tile.x, tile.y)
 				flagged = self.getNeighborsFlagged(tile.x, tile.y)
-				hypoFlags = 0
 				for tile2 in tiles:
 					if (tile2 in un2) and (tile2.flagged == True):
-						print (hypoFlags)
 						print(tile.percept_number)
 						print("flagged: (", flagged[0].x, flagged[0].y, ")")
-						if (len(flagged) + hypoFlags) > tile.percept_number:
+						if (len(flagged) + totalFlagged) > tile.percept_number:
 							tiles[tileIndexToFlag].flagged = False
 							print("returns unadded")
 							return
@@ -285,17 +289,21 @@ class MyAI(AI):
             #   3a. if it is, check if combination is already in combo. add it if not and return
 			if newTotalFlagged == maxNumberOfMines:
 				if tiles not in comboList:
-					comboList.append(tiles[:])
-					print(print("returns added"))
+					comboList.append(list(tiles))
+					print("returns added")
 					return
             # for each tile not flagged
                 # 4. call function on remaining unflagged and uncovered tile
+			print("here")
 			for tileIndex in range(len(tiles)):
 				if tiles[tileIndex].flagged == False:
 					print("going deeper")
 					self.getMineCombos(x, y, maxNumberOfMines, newTotalFlagged, tiles, tileIndex, comboList)
 					return
 
+	def jonAttempt(self):
+		valid_arrangements = self.jonAttemptDFS()
 
-
+	def jonAttemptDFS(self):
+		pass
 	
