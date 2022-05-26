@@ -1,0 +1,8 @@
+Slash Converter URL:
+http://mtbink.com/utility/convert-backslash-to-forward-slash.html
+
+Navigate to folder where MyAI is located:
+cd C:/Users/jonng/Documents/GitHub/Minesweeper-AI/Minesweeper_Python/src
+
+Test code:
+python3 Main.py -d -f "../../WorldGenerator/Jon's Tests/test7DFS11.txt"
