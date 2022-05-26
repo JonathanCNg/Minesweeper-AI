@@ -86,41 +86,54 @@ class MyAI(AI):
 				if (tile.effective_number != 0) and (tile.effective_number == len(covered_neighbors)):
 					return self.returnAction(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
 		
-		print("DFS\n")
-
-		# DFS
+		# print("DFS\n")
+		
 		for pair in self.tiles:
 			tile = self.tiles[pair]
-			possible_mine_combos = self.getMineCombos(tile.x, tile.y, tile.effective_number, tiles = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y))
-			if len(possible_mine_combos) != 0:
-				for tilelist in possible_mine_combos:
-					print("[")
-					for tile in tilelist:
-						print(tile.flagged, ",")
-					print("], ")
-				flaggedOccurences = {}
-				unflaggedOccurences = {}
-				for tile in possible_mine_combos[0]:
-					flaggedOccurences[(tile.x, tile.y)] = 0
-					unflaggedOccurences[(tile.x, tile.y)] =  0
-				for tileList in possible_mine_combos:
-					for tile in tileList:
-						if tile.flagged:
-							flaggedOccurences[(tile.x, tile.y)] += 1
-						else:
-							unflaggedOccurences[(tile.x, tile.y)] += 1	
-				for tile in possible_mine_combos[0]:
-					print(flaggedOccurences[(tile.x, tile.y)])
-					print(unflaggedOccurences[(tile.x, tile.y)])
-					if flaggedOccurences[(tile.x, tile.y)] == len(possible_mine_combos):
-						return self.returnAction(AI.Action.FLAG, tile.x, tile.y)
-					elif unflaggedOccurences[(tile.x, tile.y)] == len(possible_mine_combos):
-						return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
+			if tile.effective_number != None and tile.effective_number != 0:
+				result = self.jonAttempt(self.getNeighborsCoveredAndUnflagged(tile.x,tile.y), tile.effective_number)
+				if result:
+					if result[1] == "UNCOVER":
+						return self.returnAction(AI.Action.UNCOVER, result[0][0], result[0][1])
+					elif result[1] == "FLAG":
+						return self.returnAction(AI.Action.FLAG, result[0][0], result[0][1])
+					else:
+						print("ERROR: '" + result[1] + "' is not a valid action. Please check jonAttempt().")
+						
+
+		# DFS
+		# for pair in self.tiles:
+		# 	tile = self.tiles[pair]
+		# 	possible_mine_combos = self.getMineCombos(tile.x, tile.y, tile.effective_number, tiles = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y))
+		# 	if len(possible_mine_combos) != 0:
+		# 		for tilelist in possible_mine_combos:
+		# 			print("[")
+		# 			for tile in tilelist:
+		# 				print(tile.flagged, ",")
+		# 			print("], ")
+		# 		flaggedOccurences = {}
+		# 		unflaggedOccurences = {}
+		# 		for tile in possible_mine_combos[0]:
+		# 			flaggedOccurences[(tile.x, tile.y)] = 0
+		# 			unflaggedOccurences[(tile.x, tile.y)] =  0
+		# 		for tileList in possible_mine_combos:
+		# 			for tile in tileList:
+		# 				if tile.flagged:
+		# 					flaggedOccurences[(tile.x, tile.y)] += 1
+		# 				else:
+		# 					unflaggedOccurences[(tile.x, tile.y)] += 1	
+		# 		for tile in possible_mine_combos[0]:
+		# 			print(flaggedOccurences[(tile.x, tile.y)])
+		# 			print(unflaggedOccurences[(tile.x, tile.y)])
+		# 			if flaggedOccurences[(tile.x, tile.y)] == len(possible_mine_combos):
+		# 				return self.returnAction(AI.Action.FLAG, tile.x, tile.y)
+		# 			elif unflaggedOccurences[(tile.x, tile.y)] == len(possible_mine_combos):
+		# 				return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
 
 			# If DFS works, when running test7DFS11.txt, it should either uncover (3,3) or flag (4,3). Currently, getLeastRiskTile uncovers (1,3), which is a mine.
 			# If DFS works, when running test8DFS12.txt, it should either flag (3,3) or uncover (4,3). Currently, getLeastRiskTile uncovers (3,3), which is a mine.
 
-		print("LEAST RISK TILE\n")
+		# print("LEAST RISK TILE\n")
 
 		# If no certainly safe tiles are uncovered, use getLeastRiskTile 🧠✖️➖➗
 		if self.mines != 0:
@@ -301,9 +314,72 @@ class MyAI(AI):
 					self.getMineCombos(x, y, maxNumberOfMines, newTotalFlagged, tiles, tileIndex, comboList)
 					return
 
-	def jonAttempt(self):
-		valid_arrangements = self.jonAttemptDFS()
+	def jonAttempt(self, var_neighbors, mine_count):
+		# find valid arrangements
+		## prep
+		valid_arrangements = []
+		var_neighbors_tuples = []
+		for neighbor in var_neighbors:
+			var_neighbors_tuples.append((neighbor.x, neighbor.y))
+		## do it (dfs)
+		self.jonAttemptDFS(valid_arrangements, var_neighbors_tuples, [], mine_count, len(var_neighbors_tuples)-1)
 
-	def jonAttemptDFS(self):
-		pass
-	
+		print(valid_arrangements)
+        # determine consistently valid stuff
+		## prep
+		valid_uncover = []
+		valid_flag = []
+		## a loop that does that ^^
+
+		# return something!
+		if valid_uncover:
+			return ((valid_uncover[0][0],valid_uncover[0][1]),"UNCOVER")
+		elif valid_flag:
+			return ((valid_flag[0][0],valid_flag[0][1]),"FLAG")
+		else:
+			return None
+
+	def jonAttemptDFS(self, valid_arrangements, var_neighbors_tuples, current_arrangement, mines_left, index):
+		# for efficiency
+		if mines_left < 0:
+			return None
+		# base case
+		elif index == -1:
+			if mines_left == 0:
+				if self.validateArrangement(current_arrangement):
+					valid_arrangements.append(current_arrangement)
+					return True
+			return False
+		# non-base case
+		else:
+			# make this arrangement  UNFLAGGED 	at this index
+			unflagged_arrangement = current_arrangement[:]
+			unflagged_arrangement.append(((var_neighbors_tuples[index][0], var_neighbors_tuples[index][1]), 0))
+			# print(unflagged_arrangement)
+			self.jonAttemptDFS(valid_arrangements, var_neighbors_tuples, unflagged_arrangement, mines_left, index-1)
+			# make this arrangement   FLAGGED 	at this index
+			flagged_arrangement = current_arrangement[:]
+			flagged_arrangement.append(((var_neighbors_tuples[index][0], var_neighbors_tuples[index][1]), 1))
+			self.jonAttemptDFS(valid_arrangements, var_neighbors_tuples, flagged_arrangement, mines_left-1, index-1)
+			
+	def validateArrangement(self, current_arrangement):
+		#debugging
+		# print("DEBUGGING")
+		# print(current_arrangement)
+		bomb_dict = {}
+		for tuple in current_arrangement:
+			bomb_dict[tuple[0]] = tuple[1]
+
+		neighbors_of_neighbors = set()
+		for i in range(len(current_arrangement)):
+			uncovered_neighbors = self.getNeighborsUncovered(current_arrangement[i][0][0], current_arrangement[i][0][1])
+			for neighbor in uncovered_neighbors:
+				neighbors_of_neighbors.add(neighbor)
+		for neighbor in neighbors_of_neighbors:
+			planned_mines_near_cell = 0
+			for tuple in current_arrangement:
+				if tuple[1] and abs(tuple[0][0] - neighbor.x) <= 1 and abs(tuple[0][1] - neighbor.y) <= 1:
+					planned_mines_near_cell += 1
+			if neighbor.effective_number - planned_mines_near_cell < 0:
+				return False
+		return True
