@@ -100,15 +100,11 @@ class MyAI(AI):
 		# Code to finish the game when there are cells blocked off by a wall of mines
 		# If no mines remain yet there are covered cells, uncover all covered cells
 		temp = self.finishGame()
-		if temp:
-			print("finish!!")
-			return temp
+		if temp: return temp
 
 		# Rule of Thumb 🤖
 		temp = self.ruleOfThumb()
-		if temp:
-			print("ruleOfThumb")
-			return temp
+		if temp: return temp
 		
 
 		# DFS
@@ -138,12 +134,9 @@ class MyAI(AI):
 
 		# If we don't know what to do and we still have undealt with tiles (neither uncovered nor flagged), uncover one of them
 		temp = self.uncoverRandomUncovered()
-		if temp:
-			print("random")
-			return temp
+		if temp: return temp
 
 		# No more moves
-		print("no moves left")
 		return Action(AI.Action.LEAVE)
 
 	def returnAction(self, action, x, y):
