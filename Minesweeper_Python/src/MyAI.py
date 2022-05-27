@@ -49,91 +49,83 @@ class MyAI(AI):
 
 		# print(str(startX) + ", " + str(startY))	# For debugging purposes
 
+	def updateDatabase(self, number):
+			if self.last_action == AI.Action.UNCOVER:
+				self.uncoveredTile(self.last_tile[0], self.last_tile[1], number)
+			elif self.last_action == AI.Action.FLAG:
+				self.flaggedTile(self.last_tile[0], self.last_tile[1])
+
+	def finishGame(self):
+			if(not self.mines and self.total_tiles - self.count_uncovered_or_flagged_tiles != 0):
+				for pair in self.tiles:
+					tile = self.tiles[pair]
+					if (tile.covered and tile.flagged == False):
+						return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
+			# If mines exist and they match the number of covered cells, flag all covered cells
+			elif(self.mines and self.total_tiles - self.count_uncovered_or_flagged_tiles == self.mines):
+				for pair in self.tiles:
+					tile = self.tiles[pair]
+					if tile.covered and tile.flagged == False:
+						return self.returnAction(AI.Action.FLAG, tile.x, tile.y)
+			return None
+	
+	def ruleOfThumb(self):
+			for pair in self.tiles:
+				tile = self.tiles[pair]
+				# take action to uncover (when effective number is 0 and we still have (covered && unflagged) neighbors)
+				if tile.effective_number == 0:
+					neighbors = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)
+					if neighbors:
+						return self.returnAction(AI.Action.UNCOVER, neighbors[0].x, neighbors[0].y)
+				# or flag (when effective number is equal to uncovered neighbors, non-zero) and decrement effective number
+				if (tile.covered == False):
+					covered_neighbors = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)
+					self.updateEffectiveNumberOfCell(tile.x, tile.y)
+					if (tile.effective_number != 0) and (tile.effective_number == len(covered_neighbors)):
+						return self.returnAction(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
+			return None
+
+	def uncoverRandomUncovered(self):
+			if(self.total_tiles - self.count_uncovered_or_flagged_tiles != 0):
+				for pair in self.tiles:
+					tile = self.tiles[pair]
+					if tile.covered and not tile.flagged:
+						return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
+
 	def getAction(self, number: int) -> "Action Object":
 
 		# Updating our database after every turn
-		if self.last_action == AI.Action.UNCOVER:
-			self.uncoveredTile(self.last_tile[0], self.last_tile[1], number)
-		elif self.last_action == AI.Action.FLAG:
-			self.flaggedTile(self.last_tile[0], self.last_tile[1])
+		self.updateDatabase(number)
 
 		# Code to finish the game when there are cells blocked off by a wall of mines
 		# If no mines remain yet there are covered cells, uncover all covered cells
-		if(not self.mines and self.total_tiles - self.count_uncovered_or_flagged_tiles != 0):
-			for pair in self.tiles:
-				tile = self.tiles[pair]
-				if (tile.covered and tile.flagged == False):
-					return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
-		# If mines exist and they match the number of covered cells, flag all covered cells
-		elif(self.mines and self.total_tiles - self.count_uncovered_or_flagged_tiles == self.mines):
-			for pair in self.tiles:
-				tile = self.tiles[pair]
-				if tile.covered and tile.flagged == False:
-					return self.returnAction(AI.Action.FLAG, tile.x, tile.y)
+		temp = self.finishGame()
+		if temp:
+			print("finish!!")
+			return temp
 
 		# Rule of Thumb 🤖
-		for pair in self.tiles:
-			tile = self.tiles[pair]
-			# take action to uncover (when effective number is 0 and we still have (covered && unflagged) neighbors)
-			if tile.effective_number == 0:
-				neighbors = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)
-				if neighbors:
-					return self.returnAction(AI.Action.UNCOVER, neighbors[0].x, neighbors[0].y)
-			# or flag (when effective number is equal to uncovered neighbors, non-zero) and decrement effective number
-			if (tile.covered == False):
-				covered_neighbors = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y)
-				self.updateEffectiveNumberOfCell(tile.x, tile.y)
-				if (tile.effective_number != 0) and (tile.effective_number == len(covered_neighbors)):
-					return self.returnAction(AI.Action.FLAG, covered_neighbors[0].x, covered_neighbors[0].y)
+		temp = self.ruleOfThumb()
+		if temp:
+			print("ruleOfThumb")
+			return temp
 		
-		# print("DFS\n")
-		
+
+		# DFS
+			# If DFS works, when running test7DFS11.txt, it should either uncover (3,3) or flag (4,3). Currently, getLeastRiskTile uncovers (1,3), which is a mine.
+			# If DFS works, when running test8DFS12.txt, it should either flag (3,3) or uncover (4,3). Currently, getLeastRiskTile uncovers (3,3), which is a mine.
 		for pair in self.tiles:
 			tile = self.tiles[pair]
 			if tile.effective_number != None and tile.effective_number != 0:
 				result = self.jonAttempt(self.getNeighborsCoveredAndUnflagged(tile.x,tile.y), tile.effective_number)
 				if result:
+					print("DFS")
 					if result[1] == "UNCOVER":
 						return self.returnAction(AI.Action.UNCOVER, result[0][0], result[0][1])
 					elif result[1] == "FLAG":
 						return self.returnAction(AI.Action.FLAG, result[0][0], result[0][1])
 					else:
 						print("ERROR: '" + result[1] + "' is not a valid action. Please check jonAttempt().")
-						
-
-		# DFS
-		# for pair in self.tiles:
-		# 	tile = self.tiles[pair]
-		# 	possible_mine_combos = self.getMineCombos(tile.x, tile.y, tile.effective_number, tiles = self.getNeighborsCoveredAndUnflagged(tile.x, tile.y))
-		# 	if len(possible_mine_combos) != 0:
-		# 		for tilelist in possible_mine_combos:
-		# 			print("[")
-		# 			for tile in tilelist:
-		# 				print(tile.flagged, ",")
-		# 			print("], ")
-		# 		flaggedOccurences = {}
-		# 		unflaggedOccurences = {}
-		# 		for tile in possible_mine_combos[0]:
-		# 			flaggedOccurences[(tile.x, tile.y)] = 0
-		# 			unflaggedOccurences[(tile.x, tile.y)] =  0
-		# 		for tileList in possible_mine_combos:
-		# 			for tile in tileList:
-		# 				if tile.flagged:
-		# 					flaggedOccurences[(tile.x, tile.y)] += 1
-		# 				else:
-		# 					unflaggedOccurences[(tile.x, tile.y)] += 1	
-		# 		for tile in possible_mine_combos[0]:
-		# 			print(flaggedOccurences[(tile.x, tile.y)])
-		# 			print(unflaggedOccurences[(tile.x, tile.y)])
-		# 			if flaggedOccurences[(tile.x, tile.y)] == len(possible_mine_combos):
-		# 				return self.returnAction(AI.Action.FLAG, tile.x, tile.y)
-		# 			elif unflaggedOccurences[(tile.x, tile.y)] == len(possible_mine_combos):
-		# 				return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
-
-			# If DFS works, when running test7DFS11.txt, it should either uncover (3,3) or flag (4,3). Currently, getLeastRiskTile uncovers (1,3), which is a mine.
-			# If DFS works, when running test8DFS12.txt, it should either flag (3,3) or uncover (4,3). Currently, getLeastRiskTile uncovers (3,3), which is a mine.
-
-		# print("LEAST RISK TILE\n")
 
 		# If no certainly safe tiles are uncovered, use getLeastRiskTile 🧠✖️➖➗
 		if self.mines != 0:
@@ -141,16 +133,17 @@ class MyAI(AI):
 			if (guess_tile):
 				guess_neighbors = self.getNeighborsCoveredAndUnflagged(guess_tile.x, guess_tile.y)
 				if (len(guess_neighbors) != 0):
+					print("getLeastRiskTile")
 					return self.returnAction(AI.Action.UNCOVER, guess_neighbors[0].x, guess_neighbors[0].y)
 
 		# If we don't know what to do and we still have undealt with tiles (neither uncovered nor flagged), uncover one of them
-		if(self.total_tiles - self.count_uncovered_or_flagged_tiles != 0):
-			for pair in self.tiles:
-				tile = self.tiles[pair]
-				if tile.covered and not tile.flagged:
-					return self.returnAction(AI.Action.UNCOVER, tile.x, tile.y)
+		temp = self.uncoverRandomUncovered()
+		if temp:
+			print("random")
+			return temp
 
 		# No more moves
+		print("no moves left")
 		return Action(AI.Action.LEAVE)
 
 	def returnAction(self, action, x, y):
@@ -383,3 +376,6 @@ class MyAI(AI):
 			if neighbor.effective_number - planned_mines_near_cell < 0:
 				return False
 		return True
+
+	def frontierDFS(self):
+		pass
