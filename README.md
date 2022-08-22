@@ -13,7 +13,7 @@ An AI to play the classic game, Minesweeper. ([Play Minesweeper](https://mineswe
 
 ### I.A Briefly describe your Minimal AI algorithm. What did you do that was fun, clever, or creative?
 
-<img src="README Files/1_effective-label.png" height="300"/>
+<img src="README Files/1_effective-label.png" width="200"/>
 
 The first step for the AI was to create a “Rule of Thumb” algorithm that could determine the safe and mine tiles simply by analyzing a single uncovered tile and its neighbors. Label is 0? Unflag all neighbors. Effective label equal to the quantity of covered neighbors? The covered neighbors must be mines to flag. The tile label equals its quantity of flagged neighbors? Its covered, unflagged neighbors must be safe.
 
@@ -21,11 +21,11 @@ Of course, this algorithm by itself is narrowminded and doesn’t include inferr
 
 The equation for calculating risk:
 
-<img src="README Files/2_risk.png" height="300"/>
+<img src="README Files/2_risk.png" width="200"/>
 
 ### I.B Describe your Minimal AI algorithm's performance:
 
-<img src="README Files/3_chart.png" height="300"/>
+<img src="README Files/3_chart.png" height="200"/>
 
 Minimal AI surpassed our expectations, solving all of Easy and the majority of Beginner, and Intermediate worlds. Minimal AI struggled with Expert worlds with only a 3.9% win percentage. Overall, a minority (40.1%) of the worlds were won.
 
@@ -41,6 +41,6 @@ We also implemented a DFS to explore all the valid mine combinations on the fron
 
 ### II.B Describe your Final AI algorithm's performance:
 
-<img src="README Files/6_chart.png" height="300"/>
+<img src="README Files/6_chart.png" height="200"/>
 
 Final AI is a significant improvement with over 150% of the performance of Minimal AI, when looking at overall worlds solved. While all measures improved, Expert worlds improved the most with Final AI performing at over 700% of Minimal AI. With Minimal AI, a minority of the worlds were won. With Final AI, a majority of the worlds were won!
