@@ -13,7 +13,7 @@ An AI to play the classic game, Minesweeper. ([Play Minesweeper](https://mineswe
 
 ### I.A Briefly describe your Minimal AI algorithm. What did you do that was fun, clever, or creative?
 
-<img src="README Files/1_effective-label.png" width="200"/>
+<img src="README Files/1_effective-label.png" height="50"/>
 
 The first step for the AI was to create a “Rule of Thumb” algorithm that could determine the safe and mine tiles simply by analyzing a single uncovered tile and its neighbors. Label is 0? Unflag all neighbors. Effective label equal to the quantity of covered neighbors? The covered neighbors must be mines to flag. The tile label equals its quantity of flagged neighbors? Its covered, unflagged neighbors must be safe.
 
@@ -21,7 +21,7 @@ Of course, this algorithm by itself is narrowminded and doesn’t include inferr
 
 The equation for calculating risk:
 
-<img src="README Files/2_risk.png" width="200"/>
+<img src="README Files/2_risk.png" height="50"/>
 
 ### I.B Describe your Minimal AI algorithm's performance:
 
@@ -33,7 +33,7 @@ Minimal AI surpassed our expectations, solving all of Easy and the majority of B
 
 We added a “Subset Neighbor” algorithm. If an uncovered tile, TileA, has covered neighbors which are a superset of the covered neighbors of a second uncovered tile, TileB, we check: If the TileA/TileB effective value difference is 0, TileA’s exclusive covered neighbors are not mines and shall be uncovered. If the TileA/TileB effective value difference is equal to the difference of covered neighbors, TileA’s exclusive covered neighbors are mines to be flagged.
 
-<img src="README Files/4-5_heuristic.png" height="300"/>
+<img src="README Files/4-5_heuristic.png" height="200"/>
 
 We also implemented an algorithm similar to “Subset Neighbor” which considers TileC and TileD, which have intersecting covered neighbors and one exclusive coveredneighbor. If Tile C has an effective label which is 1 greater than the effective label of Tile D, Tile B’s exclusive covered neighbor is not a mine and can be uncovered.
 
